@@ -4,8 +4,6 @@ package com.sigpwned.uax29;
  * Heavily inspired by Lucene project UAX29URLEmailTokenizerImpl
  */
 
-//import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-
 /**
  * This class implements Word Break rules from the Unicode Text Segmentation 
  * algorithm, as specified in 
@@ -25,9 +23,11 @@ package com.sigpwned.uax29;
  *   <li>&lt;KATAKANA&gt;: A sequence of katakana characters</li>
  *   <li>&lt;HANGUL&gt;: A sequence of Hangul characters</li>
  *   <li>&lt;EMOJI&gt;: A sequence of Emoji characters</li>
+ *   <li>&lt;HASHTAG&gt;: A social media hashtag</li>
+ *   <li>&lt;CASHTAG&gt;: A social media cashtag</li>
+ *   <li>&lt;MENTION&gt;: A social media mention</li>
  * </ul>
  */
-@SuppressWarnings({"unused","fallthrough"})
 %%
 
 %unicode 9.0
@@ -35,11 +35,14 @@ package com.sigpwned.uax29;
 %final
 %public
 %class UAX29URLEmailTokenizerImpl
-%function getNextToken
-%char
+%line
+%column
 %xstate AVOID_BAD_URL
-%buffer 255
 
+// URLs are likely to be the longest token types. RFC7230 recommends implementations handle a
+// minimum of 8000 octets, per https://www.rfc-editor.org/rfc/rfc7230#section-3.1.1. To that end,
+// we set our token length limit at 8KiB, or 8192.
+%buffer 8192
 
 // UAX#29 WB4.  X (Extend | Format | ZWJ)* --> X
 //
@@ -196,6 +199,22 @@ EMAILdomainLiteralText = [\u0001-\u0008\u000B\u000C\u000E-\u005A\u005E-\u007F] |
 EMAILbracketedHost = "[" ({EMAILdomainLiteralText}* | {IPv4Address} | [iI][pP][vV] "6:" {IPv6Address}) "]"
 EMAIL = {EMAILlocalPart} "@" ({DomainNameStrict} | {EMAILbracketedHost})
 
+// Hashtags are a #, followed by one or more letters, numbers, marks, or underscores. Must contain
+// at least one letter.
+// https://github.com/twitter/twitter-text/blob/65e7e00da383fb77f5ab7fe3c0dc26b724e14035/java/src/main/java/com/twitter/twittertext/Regex.java#L310
+HASHTAGLettersAndNumerals = [\p{L}\p{M}\p{Nd}_]
+HASHTAGLetters = [\p{L}\p{M}]
+HASHTAG = [#] {HASHTAGLettersAndNumerals}* {HASHTAGLetters} {HASHTAGLettersAndNumerals}*
+
+// Cashtags are a stock ticker symbol with an optional location
+// https://github.com/twitter/twitter-text/blob/65e7e00da383fb77f5ab7fe3c0dc26b724e14035/java/src/main/java/com/twitter/twittertext/Regex.java#L250
+CASHTAG = [$] [a-zA-Z]{1,6} ([._][a-zA-Z]{1,2})?
+
+// Per https://help.twitter.com/en/managing-your-account/twitter-username-rules, screen names can
+// only be up to 15 characters long. However, longer usernames exist in the wild, up to 20
+// characters. Examples: edsovieiget_randletz, bernjoseget_randletn, buenthiaget_randletw, ...
+// https://github.com/twitter/twitter-text/blob/65e7e00da383fb77f5ab7fe3c0dc26b724e14035/java/src/main/java/com/twitter/twittertext/Regex.java#L316
+MENTION = [@] [a-zA-Z0-9_]{1,20}
 
 %{
   /** Alphanumeric sequences */
@@ -235,28 +254,18 @@ EMAIL = {EMAILlocalPart} "@" ({DomainNameStrict} | {EMAILbracketedHost})
   /** Emoji token type */
   public static final int EMOJI_TYPE = UAX29URLEmailTokenizer.EMOJI;
 
-  /** Character count processed so far */
-  public final int yychar()
-  {
-    return yychar;
-  }
+  /** Hashtag token type */
+  public static final int HASHTAG_TYPE = UAX29URLEmailTokenizer.HASHTAG;
 
-//  /**
-//   * Fills CharTermAttribute with the current token text.
-//   */
-//  public final void getText(CharTermAttribute t) {
-//    t.copyBuffer(zzBuffer, zzStartRead, zzMarkedPos-zzStartRead);
-//  }
+  /** Cashtag token type */
+  public static final int CASHTAG_TYPE = UAX29URLEmailTokenizer.CASHTAG;
+
+  /** Mention token type */
+  public static final int MENTION_TYPE = UAX29URLEmailTokenizer.MENTION;
   
-  /**
-   * Sets the scanner buffer size in chars
-   */
-   public final void setBufferSize(int numChars) {
-     ZZ_BUFFERSIZE = numChars;
-     char[] newZzBuffer = new char[ZZ_BUFFERSIZE];
-     System.arraycopy(zzBuffer, 0, newZzBuffer, 0, Math.min(zzBuffer.length, ZZ_BUFFERSIZE));
-     zzBuffer = newZzBuffer;
-   }
+  public int getLine() { return yyline; }
+  
+  public int getColumn() { return yycolumn; }
 %}
 
 %%
@@ -294,6 +303,11 @@ EMAIL = {EMAILlocalPart} "@" ({DomainNameStrict} | {EMAILbracketedHost})
 
   {EMAIL} { yybegin(YYINITIAL); return EMAIL_TYPE; }
 
+  {HASHTAG} { yybegin(YYINITIAL); return HASHTAG_TYPE; }
+
+  {CASHTAG} { yybegin(YYINITIAL); return CASHTAG_TYPE; }
+
+  {MENTION} { yybegin(YYINITIAL); return MENTION_TYPE; }
 
   // Instead of these: UAX#29 WB3c. ZWJ × (Glue_After_Zwj | EBG)
   //                          WB14. (E_Base | EBG) × E_Modifier
