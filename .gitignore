@@ -3,8 +3,10 @@
 # Compiled class file
 *.class
 
-# Generated java files
-src/gen/java/
+# Normally, we wouldn't commit generated code. But this code changes only very rarely, and the
+# generation process takes 7min and 12GB of memory. Rather than fuss with a complex CI/CD setup,
+# let's just commit the generated code.
+# src/gen/java/
 
 # Log file
 *.log
