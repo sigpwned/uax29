@@ -21,6 +21,7 @@ package com.sigpwned.uax29;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 
 public class UAX29URLEmailTokenizer implements AutoCloseable {
   /** Alpha/numeric token type */
@@ -59,9 +60,14 @@ public class UAX29URLEmailTokenizer implements AutoCloseable {
   private final UAX29URLEmailTokenizerImpl scanner;
 
   /**
-   * Creates a new instance of the UAX29URLEmailTokenizer. Attaches the <code>input</code> to the
-   * newly created JFlex scanner.
+   * Equivalent to {@code new UAX29URLEmailTokenizer(new StringReader(text))}.
+   * 
+   * @see #UAX29URLEmailTokenizer(Reader)
    */
+  public UAX29URLEmailTokenizer(String text) {
+    this(new StringReader(text));
+  }
+
   public UAX29URLEmailTokenizer(Reader in) {
     if (in == null)
       throw new NullPointerException();
@@ -96,6 +102,15 @@ public class UAX29URLEmailTokenizer implements AutoCloseable {
   @Override
   public void close() throws IOException {
     scanner.yyclose();
+  }
+
+  /**
+   * Equivalent to {@code reset(new StringReader(text))}.
+   * 
+   * @see #reset(Reader)
+   */
+  public void reset(String text) throws IOException {
+    reset(new StringReader(text));
   }
 
   public void reset(Reader in) throws IOException {
