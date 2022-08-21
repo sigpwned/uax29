@@ -3,7 +3,7 @@
 
     <groupId>com.sigpwned</groupId>
     <artifactId>uax29</artifactId>
-    <version>0.0.0-b1-SNAPSHOT</version>
+    <version>0.0.0-b1</version>
     <name>uax29</name>
     <inceptionYear>2022</inceptionYear>
     <description>Implements Unicode Standard Annex #29 word break rules</description>
@@ -19,7 +19,8 @@
         <connection>scm:git:ssh://git@github.com/sigpwned/uax29.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/sigpwned/uax29.git</developerConnection>
         <url>https://github.com/sigpwned/uax29/tree/main</url>
-    </scm>
+      <tag>v0.0.0-b1</tag>
+  </scm>
 
     <licenses>
         <license>
