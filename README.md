@@ -1,4 +1,4 @@
-# UAX29
+# UAX29 [![tests](https://github.com/sigpwned/uax29/actions/workflows/tests.yml/badge.svg)](https://github.com/sigpwned/uax29/actions/workflows/tests.yml) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=sigpwned_uax29&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=sigpwned_uax29) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=sigpwned_uax29&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=sigpwned_uax29) [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=sigpwned_uax29&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=sigpwned_uax29) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.sigpwned/uax29/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.sigpwned/uax29)
 
 Java implementation of [UAX #29 text segmentation algorithm](https://unicode.org/reports/tr29/), plus token types for URLs, emoji, emails, hashtags, cashtags, and mentions.
 
